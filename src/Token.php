@@ -12,15 +12,11 @@ class Token
     public string $type;
 
     /**
-     * @var mixed
+     * @var string|null
      */
-    public $value;
+    public ?string $value;
 
-    /**
-     * @param string $type
-     * @param mixed $value
-     */
-    public function __construct(string $type, $value = null)
+    public function __construct(string $type, ?string $value = null)
     {
         $this->type = $type;
         $this->value = $value;
@@ -31,10 +27,10 @@ class Token
      *
      * Examples:
      *      Token(INTEGER, 3)
-     *      Token(PLUS '+')
+     *      Token(OPERATOR '+')
      */
     public function __toString(): string
     {
-        return sprintf('Token(%s, %s)', $this->type, (string) $this->value);
+        return sprintf('Token(%s, %s)', $this->type, $this->value ?? '');
     }
 }
