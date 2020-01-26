@@ -13,3 +13,4 @@ print $interpreter->evaluate('12 + 2 + 2') . PHP_EOL;
 print $interpreter->evaluate('12 - 2 - 2') . PHP_EOL;
 print $interpreter->evaluate('12 + 2 - 2') . PHP_EOL;
 print $interpreter->evaluate('12 - 2 + 2') . PHP_EOL;
+print $interpreter->evaluate('12 - 2 * 2') . PHP_EOL;

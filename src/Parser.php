@@ -26,6 +26,7 @@ class Parser
     public function __construct(array $tokens)
     {
         $this->tokens = $tokens;
+        $this->currentToken = $this->getNextToken();
     }
 
     public function getNextToken(): ?Token
@@ -37,32 +38,49 @@ class Parser
         return $this->currentToken = $this->tokens[$this->position++];
     }
 
-    public function term(): int
+    public function factor(): int
     {
         $token = $this->currentToken;
         $this->eat(TokenType::INTEGER);
         return intval($token->value ?? '');
     }
 
-    public function eat(string $type): void
+    public function term(): float
     {
-        if (null === $this->currentToken) {
-            return;
+        $result = $this->factor();
+
+        while (
+            null !== $this->currentToken &&
+            TokenType::OPERATOR === $this->currentToken->type &&
+            in_array($this->currentToken->value, ['*', '/'])
+        ) {
+            $op = $this->currentToken;
+            $this->eat(TokenType::OPERATOR);
+
+            switch ($op->value) {
+                case '*':
+                    $result *= $this->factor();
+                    break;
+                case '/':
+                    $result /= $this->factor();
+                    break;
+                default:
+                    break;
+            }
         }
 
-        if ($this->currentToken->type !== $type) {
-            throw new Exception(sprintf('Unexpected current token type: %s', (string) $this->currentToken));
-        }
-
-        $this->currentToken = $this->getNextToken();
+        return $result;
     }
 
-    public function expr(): int
+    public function expr(): float
     {
-        $this->currentToken = $this->getNextToken();
-
         $result = $this->term();
-        while (null !== $this->currentToken && TokenType::OPERATOR === $this->currentToken->type) {
+
+        while (
+            null !== $this->currentToken &&
+            TokenType::OPERATOR === $this->currentToken->type &&
+            in_array($this->currentToken->value, ['+', '-'])
+        ) {
             $op = $this->currentToken;
             $this->eat(TokenType::OPERATOR);
 
@@ -74,10 +92,23 @@ class Parser
                     $result -= $this->term();
                     break;
                 default:
-                    throw new Exception(sprintf('Unknown operation: %s', $op->value ?? '(missing)'));
+                    break;
             }
         }
 
         return $result;
+    }
+
+    public function eat(string $type): void
+    {
+        if (null !== $this->currentToken && $this->currentToken->type !== $type) {
+            throw new Exception(sprintf(
+                'Unexpected current token type. Expected %s but found %s',
+                $type,
+                $this->currentToken->type
+            ));
+        }
+
+        $this->getNextToken();
     }
 }

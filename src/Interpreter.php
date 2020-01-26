@@ -6,7 +6,7 @@ namespace Pascal;
 
 class Interpreter
 {
-    public function evaluate(string $text): int
+    public function evaluate(string $text): float
     {
         $tokens = (new Lexer($text))->getTokens();
         return (new Parser($tokens))->expr();
