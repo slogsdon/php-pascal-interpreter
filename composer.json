@@ -9,6 +9,11 @@
             "email": "shane@shanelogsdon.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Pascal\\": "src/"
+        }
+    },
     "require": {},
     "require-dev": {
         "phpunit/phpunit": "^8.5",
