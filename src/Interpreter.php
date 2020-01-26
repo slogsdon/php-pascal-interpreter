@@ -73,6 +73,13 @@ class Interpreter
         return new Token(TokenType::INTEGER, trim($result));
     }
 
+    public function term(): int
+    {
+        $token = $this->currentToken;
+        $this->eat(TokenType::INTEGER);
+        return intval($token->value ?? '');
+    }
+
     /**
      * Lexical analyzer (also known as scanner or tokenizer)
      * This method is responsible for breaking a sentence
@@ -117,22 +124,25 @@ class Interpreter
 
     public function expr(): int
     {
-        $left = $this->currentToken = $this->integer();
-        $this->eat(TokenType::INTEGER);
+        $this->currentToken = $this->getNextToken();
 
-        $op = $this->currentToken;
-        $this->eat(TokenType::OPERATOR);
+        $result = $this->term();
+        while (null !== $this->currentToken && TokenType::OPERATOR === $this->currentToken->type) {
+            $op = $this->currentToken;
+            $this->eat(TokenType::OPERATOR);
 
-        $right = $this->currentToken;
-        $this->eat(TokenType::INTEGER);
-
-        switch ($op->value ?? '') {
-            case '+':
-                return intval($left->value ?? '') + intval($right->value ?? '');
-            case '-':
-                return intval($left->value ?? '') - intval($right->value ?? '');
-            default:
-                throw new Exception(sprintf('Unknown operation: %s', (string) $op));
+            switch ($op->value) {
+                case '+':
+                    $result += $this->term();
+                    break;
+                case '-':
+                    $result -= $this->term();
+                    break;
+                default:
+                    throw new Exception(sprintf('Unknown operation: %s', $op->value ?? '(missing)'));
+            }
         }
+
+        return $result;
     }
 }
