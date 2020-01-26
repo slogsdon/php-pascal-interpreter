@@ -14,6 +14,11 @@
             "Pascal\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Pascal\\Tests\\": "test/"
+        }
+    },
     "require": {},
     "require-dev": {
         "phpunit/phpunit": "^8.5",
