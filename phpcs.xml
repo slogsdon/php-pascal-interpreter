@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<ruleset name="pascal-interpreter">
+    <file>./src</file>
+    <file>./test</file>
+    <rule ref="PSR12"/>
+</ruleset>
