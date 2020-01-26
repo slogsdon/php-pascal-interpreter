@@ -130,6 +130,16 @@ class Lexer
                 return new Token(TokenType::OPERATOR, '/');
             }
 
+            if ('(' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::OPEN_PAREN, '(');
+            }
+
+            if (')' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::CLOSE_PAREN, ')');
+            }
+
             throw new Exception(sprintf('Unknown token: %s', (string) $this->currentChar));
         }
 

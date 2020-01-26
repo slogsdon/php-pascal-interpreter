@@ -38,11 +38,21 @@ class Parser
         return $this->currentToken = $this->tokens[$this->position++];
     }
 
-    public function factor(): int
+    public function factor(): float
     {
         $token = $this->currentToken;
-        $this->eat(TokenType::INTEGER);
-        return intval($token->value ?? '');
+        switch ($token->type ?? '') {
+            case TokenType::INTEGER:
+                $this->eat(TokenType::INTEGER);
+                return intval($token->value ?? '');
+            case TokenType::OPEN_PAREN:
+                $this->eat(TokenType::OPEN_PAREN);
+                $result = $this->expr();
+                $this->eat(TokenType::CLOSE_PAREN);
+                return $result;
+            default:
+                throw new Exception('Unexpected form');
+        }
     }
 
     public function term(): float
