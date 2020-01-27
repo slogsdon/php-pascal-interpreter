@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pascal;
 
+use Pascal\LexicalAnalysis\Lexer;
+use Pascal\Parsing\Parser;
+
 class Interpreter
 {
     public function evaluate(string $text): float

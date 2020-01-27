@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal;
+namespace Pascal\LexicalAnalysis;
 
 abstract class TokenType
 {

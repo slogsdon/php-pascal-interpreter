@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pascal;
+namespace Pascal\Parsing;
 
 use Exception;
+use Pascal\LexicalAnalysis\{Token, TokenType};
 
 class Parser
 {
