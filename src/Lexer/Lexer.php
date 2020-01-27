@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal\LexicalAnalysis;
+namespace Pascal\Lexer;
 
 use Exception;
 

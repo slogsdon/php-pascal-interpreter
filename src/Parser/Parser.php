@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Parsing;
+namespace Pascal\Parser;
 
 use Exception;
-use Pascal\LexicalAnalysis\{Token, TokenType};
+use Pascal\Lexer\{Token, TokenType};
 
 class Parser
 {
@@ -39,75 +39,65 @@ class Parser
         return $this->currentToken = $this->tokens[$this->position++];
     }
 
-    public function factor(): float
+    public function factor(): Node
     {
         $token = $this->currentToken;
-        switch ($token->type ?? '') {
+
+        if (null === $token) {
+            throw new Exception("Unreachable: no token present");
+        }
+
+        switch ($token->type) {
             case TokenType::INTEGER:
                 $this->eat(TokenType::INTEGER);
-                return intval($token->value ?? '');
+                return new Number($token);
             case TokenType::OPEN_PAREN:
                 $this->eat(TokenType::OPEN_PAREN);
-                $result = $this->expr();
+                $node = $this->expr();
                 $this->eat(TokenType::CLOSE_PAREN);
-                return $result;
+                return $node;
             default:
                 throw new Exception('Unexpected form');
         }
     }
 
-    public function term(): float
+    public function term(): Node
     {
-        $result = $this->factor();
+        $node = $this->factor();
 
         while (
             null !== $this->currentToken &&
             TokenType::OPERATOR === $this->currentToken->type &&
             in_array($this->currentToken->value, ['*', '/'])
         ) {
-            $op = $this->currentToken;
+            $token = $this->currentToken;
             $this->eat(TokenType::OPERATOR);
-
-            switch ($op->value) {
-                case '*':
-                    $result *= $this->factor();
-                    break;
-                case '/':
-                    $result /= $this->factor();
-                    break;
-                default:
-                    break;
-            }
+            $node = new BinaryOperation($node, $token, $this->factor());
         }
 
-        return $result;
+        return $node;
     }
 
-    public function expr(): float
+    public function expr(): Node
     {
-        $result = $this->term();
+        $node = $this->term();
 
         while (
             null !== $this->currentToken &&
             TokenType::OPERATOR === $this->currentToken->type &&
             in_array($this->currentToken->value, ['+', '-'])
         ) {
-            $op = $this->currentToken;
+            $token = $this->currentToken;
             $this->eat(TokenType::OPERATOR);
-
-            switch ($op->value) {
-                case '+':
-                    $result += $this->term();
-                    break;
-                case '-':
-                    $result -= $this->term();
-                    break;
-                default:
-                    break;
-            }
+            $node = new BinaryOperation($node, $token, $this->term());
         }
 
-        return $result;
+        return $node;
+    }
+
+    public function parse(): Node
+    {
+        return $this->expr();
     }
 
     public function eat(string $type): void
