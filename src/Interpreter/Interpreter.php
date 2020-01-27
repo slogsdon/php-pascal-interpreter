@@ -7,7 +7,8 @@ namespace Pascal\Interpreter;
 use Exception;
 use Pascal\Interpreter\Visitor\Visitor;
 use Pascal\Lexer\Lexer;
-use Pascal\Parser\{Node, Parser};
+use Pascal\Parser\Parser;
+use Pascal\Parser\AST\Node;
 
 class Interpreter
 {

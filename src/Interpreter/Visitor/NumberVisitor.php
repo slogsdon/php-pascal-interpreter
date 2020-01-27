@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pascal\Interpreter\Visitor;
 
-use Pascal\Parser\{Node, Number};
+use Pascal\Parser\AST\{Node, Number};
 use Exception;
 
 class NumberVisitor extends Visitor

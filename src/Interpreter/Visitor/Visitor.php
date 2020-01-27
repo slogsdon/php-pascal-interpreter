@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Pascal\Interpreter\Visitor;
 
 use Pascal\Interpreter\Interpreter;
-use Pascal\Parser\Node;
+use Pascal\Parser\AST\Node;
 
 abstract class Visitor
 {

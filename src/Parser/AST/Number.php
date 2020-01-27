@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Parser;
+namespace Pascal\Parser\AST;
 
 use Pascal\Lexer\Token;
 

@@ -6,6 +6,7 @@ namespace Pascal\Parser;
 
 use Exception;
 use Pascal\Lexer\{Token, TokenType};
+use Pascal\Parser\AST\{BinaryOperation, Node, Number};
 
 class Parser
 {

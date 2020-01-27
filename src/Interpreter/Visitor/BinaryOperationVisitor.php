@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pascal\Interpreter\Visitor;
 
-use Pascal\Parser\{BinaryOperation, Node};
+use Pascal\Parser\AST\{BinaryOperation, Node};
 use Exception;
 
 class BinaryOperationVisitor extends Visitor
