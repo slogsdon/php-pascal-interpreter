@@ -18,11 +18,18 @@ class NumberVisitor extends Visitor
             throw new Exception();
         }
 
-        return $node->value;
+        return false === strpos((string) $node->value, '.')
+            ? $this->visitAsInt($node)
+            : $this->visitAsFloat($node);
     }
 
-    protected function visitAsFloat(Node $node): float
+    protected function visitAsFloat(Number $node): float
     {
-        return floatval($this->interpreter->visit($node));
+        return floatval((string) $node->value);
+    }
+
+    protected function visitAsInt(Number $node): int
+    {
+        return intval((string) $node->value);
     }
 }

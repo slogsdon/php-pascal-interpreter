@@ -8,6 +8,11 @@ use Exception;
 
 class Lexer
 {
+    public const REGEX_ALPHA_INSENSITIVE = '/[a-z]/i';
+    public const REGEX_ALPHANUMERIC_INSENSITIVE = '/[a-z0-9]/i';
+    public const REGEX_NUMERIC = '/[0-9]/';
+    public const REGEX_WHITESPACE = '/\s/';
+
     /**
      * client string input, e.g. "3+5"
      *
@@ -31,10 +36,19 @@ class Lexer
 
     protected ?string $currentChar;
 
+    /**
+     * @var array<string, Token>
+     */
+    protected array $reservedKeywords;
+
     public function __construct(string $text)
     {
         $this->text = $text;
         $this->currentChar = $this->text[$this->position];
+        $this->reservedKeywords = [
+            TokenType::BEGIN => new Token(TokenType::BEGIN, 'BEGIN'),
+            TokenType::END => new Token(TokenType::END, 'END'),
+        ];
     }
 
     /**
@@ -49,6 +63,8 @@ class Lexer
             $result[] = $this->currentToken;
             $this->currentToken = $this->getNextToken();
         }
+
+        $result[] = $this->currentToken;
 
         return $result;
     }
@@ -73,7 +89,7 @@ class Lexer
 
     public function skipWhitespace(): void
     {
-        while (null !== $this->currentChar && preg_match('/\s/', $this->currentChar)) {
+        while (null !== $this->currentChar && preg_match((string) self::REGEX_WHITESPACE, $this->currentChar)) {
             $this->advance();
         }
     }
@@ -83,13 +99,14 @@ class Lexer
      */
     public function integer(): Token
     {
-        $result = $this->currentChar ?? '';
+        $result = '';
 
-        while (null !== $this->currentChar && preg_match('/[0-9]/', $this->currentChar)) {
-            $result .= $this->advance() ?? '';
+        while (null !== $this->currentChar && preg_match((string) self::REGEX_NUMERIC, $this->currentChar)) {
+            $result .= $this->currentChar;
+            $this->advance();
         }
 
-        return new Token(TokenType::INTEGER, trim($result));
+        return new Token(TokenType::INTEGER, $result);
     }
 
     /**
@@ -100,12 +117,12 @@ class Lexer
     public function getNextToken(): Token
     {
         while (null !== $this->currentChar) {
-            if (preg_match('/\s/', $this->currentChar)) {
+            if (preg_match((string) self::REGEX_WHITESPACE, $this->currentChar)) {
                 $this->skipWhitespace();
                 continue;
             }
 
-            if (preg_match('/[0-9]/', $this->currentChar)) {
+            if (preg_match((string) self::REGEX_NUMERIC, $this->currentChar)) {
                 $int = $this->integer();
                 return $int;
             }
@@ -140,9 +157,59 @@ class Lexer
                 return new Token(TokenType::CLOSE_PAREN, ')');
             }
 
+            if (preg_match(self::REGEX_ALPHA_INSENSITIVE, $this->currentChar)) {
+                return $this->id();
+            }
+
+            if (':' === $this->currentChar && '=' === $this->peek()) {
+                $this->advance();
+                $this->advance();
+                return new Token(TokenType::ASSIGNMENT, ':=');
+            }
+
+            if (';' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::END_STATEMENT, ';');
+            }
+
+            if ('.' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::DOT, '.');
+            }
+
             throw new Exception(sprintf('Unknown token: %s', (string) $this->currentChar));
         }
 
         return new Token(TokenType::EOF);
+    }
+
+    public function peek(): ?string
+    {
+        $peekPosition = $this->position + 1;
+
+        if ($peekPosition > mb_strlen($this->text) - 1) {
+            return null;
+        }
+
+        return $this->text[$peekPosition];
+    }
+
+    public function id(): Token
+    {
+        $result = '';
+
+        while (
+            null !== $this->currentChar &&
+            preg_match((string) self::REGEX_ALPHANUMERIC_INSENSITIVE, $this->currentChar)
+        ) {
+            $result .= $this->currentChar;
+            $this->advance();
+        }
+
+        if (isset($this->reservedKeywords[$result])) {
+            return $this->reservedKeywords[$result];
+        }
+
+        return new Token(TokenType::ID, $result);
     }
 }

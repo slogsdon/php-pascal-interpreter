@@ -12,14 +12,15 @@ use Pascal\Parser\AST\Node;
 
 class Interpreter
 {
-    /**
-     * @return mixed
-     */
-    public function interpret(string $text)
+    protected array $globalScope = [];
+
+    public function interpret(string $text): void
     {
         $tokens = (new Lexer($text))->getTokens();
         $tree = (new Parser($tokens))->parse();
-        return $this->visit($tree);
+        $this->visit($tree);
+        /** @psalm-suppress ForbiddenCode */
+        var_dump($this->globalScope);
     }
 
     /**
@@ -41,5 +42,25 @@ class Interpreter
          */
         $visitor = new $visitorName($this);
         return $visitor->visit($node);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function set(string $name, $value): void
+    {
+        $this->globalScope[$name] = $value;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function get(string $name)
+    {
+        if (!isset($this->globalScope[$name])) {
+            throw new Exception(sprintf('Undefined variable: %s', $name));
+        }
+
+        return $this->globalScope[$name];
     }
 }
