@@ -6,6 +6,7 @@ namespace Pascal\Interpreter\Visitor;
 
 use Pascal\Parser\AST\{BinaryOperation, Node};
 use Exception;
+use Pascal\Lexer\TokenType;
 
 class BinaryOperationVisitor extends Visitor
 {
@@ -20,18 +21,18 @@ class BinaryOperationVisitor extends Visitor
 
         switch ($node->op->value) {
             case '+':
-                return $this->visitAsFloat($node->left) + $this->visitAsFloat($node->right);
+                return $this->visitAsNodeType($node->left) + $this->visitAsNodeType($node->right);
             case '-':
-                return $this->visitAsFloat($node->left) - $this->visitAsFloat($node->right);
+                return $this->visitAsNodeType($node->left) - $this->visitAsNodeType($node->right);
             case '*':
-                return $this->visitAsFloat($node->left) * $this->visitAsFloat($node->right);
+                return $this->visitAsNodeType($node->left) * $this->visitAsNodeType($node->right);
             case '/':
-                return $this->visitAsFloat($node->left) / $this->visitAsFloat($node->right);
+                return $this->visitAsNodeType($node->left) / $this->visitAsNodeType($node->right);
         }
-    }
 
-    protected function visitAsFloat(Node $node): float
-    {
-        return floatval($this->interpreter->visit($node));
+        switch ($node->op->type) {
+            case TokenType::INTEGER_DIV:
+                return intval($this->visitAsNodeType($node->left) / $this->visitAsNodeType($node->right));
+        }
     }
 }

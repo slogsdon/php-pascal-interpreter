@@ -46,8 +46,13 @@ class Lexer
         $this->text = $text;
         $this->currentChar = $this->text[$this->position];
         $this->reservedKeywords = [
-            TokenType::BEGIN => new Token(TokenType::BEGIN, 'BEGIN'),
-            TokenType::END => new Token(TokenType::END, 'END'),
+            'PROGRAM' => new Token(TokenType::PROGRAM, 'PROGRAM'),
+            'VAR' => new Token(TokenType::VAR, 'VAR'),
+            'DIV' => new Token(TokenType::INTEGER_DIV, 'DIV'),
+            'INTEGER' => new Token(TokenType::INTEGER, 'INTEGER'),
+            'REAL' => new Token(TokenType::REAL, 'REAL'),
+            'BEGIN' => new Token(TokenType::BEGIN, 'BEGIN'),
+            'END' => new Token(TokenType::END, 'END'),
         ];
     }
 
@@ -94,10 +99,19 @@ class Lexer
         }
     }
 
+    public function skipComment(): void
+    {
+        while ('}' !== $this->currentChar) {
+            $this->advance();
+        }
+        // include closing brace
+        $this->advance();
+    }
+
     /**
-     * Return a (multidigit) integer consumed from the input.
+     * Return a (multidigit) number consumed from the input.
      */
-    public function integer(): Token
+    public function number(): Token
     {
         $result = '';
 
@@ -106,7 +120,19 @@ class Lexer
             $this->advance();
         }
 
-        return new Token(TokenType::INTEGER, $result);
+        if ('.' !== $this->currentChar) {
+            return new Token(TokenType::INTEGER_CONST, $result);
+        }
+
+        $result .= $this->currentChar;
+        $this->advance();
+
+        while (null !== $this->currentChar && preg_match((string) self::REGEX_NUMERIC, $this->currentChar)) {
+            $result .= $this->currentChar;
+            $this->advance();
+        }
+
+        return new Token(TokenType::REAL_CONST, $result);
     }
 
     /**
@@ -123,8 +149,8 @@ class Lexer
             }
 
             if (preg_match((string) self::REGEX_NUMERIC, $this->currentChar)) {
-                $int = $this->integer();
-                return $int;
+                $number = $this->number();
+                return $number;
             }
 
             if ('+' === $this->currentChar) {
@@ -175,6 +201,27 @@ class Lexer
             if ('.' === $this->currentChar) {
                 $this->advance();
                 return new Token(TokenType::DOT, '.');
+            }
+
+            if ('{' === $this->currentChar) {
+                $this->advance();
+                $this->skipComment();
+                continue;
+            }
+
+            if (':' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::COLON, ':');
+            }
+
+            if (',' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::COMMA, ',');
+            }
+
+            if ('/' === $this->currentChar) {
+                $this->advance();
+                return new Token(TokenType::FLOAT_DIV, '/');
             }
 
             throw new Exception(sprintf('Unknown token: %s', (string) $this->currentChar));

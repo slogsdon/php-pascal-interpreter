@@ -6,7 +6,19 @@ namespace Pascal\Parser;
 
 use Exception;
 use Pascal\Lexer\{Token, TokenType};
-use Pascal\Parser\AST\{Assignment, BinaryOperation, Compound, Node, NoOperation, Number, Variable};
+use Pascal\Parser\AST\{
+    Assignment,
+    BinaryOperation,
+    Block,
+    Compound,
+    Node,
+    NoOperation,
+    Number,
+    Program,
+    Type,
+    Variable,
+    VariableDeclaration
+};
 
 class Parser
 {
@@ -49,8 +61,11 @@ class Parser
         }
 
         switch ($token->type) {
-            case TokenType::INTEGER:
-                $this->eat(TokenType::INTEGER);
+            case TokenType::INTEGER_CONST:
+                $this->eat(TokenType::INTEGER_CONST);
+                return new Number($token);
+            case TokenType::REAL_CONST:
+                $this->eat(TokenType::REAL_CONST);
                 return new Number($token);
             case TokenType::OPEN_PAREN:
                 $this->eat(TokenType::OPEN_PAREN);
@@ -61,14 +76,14 @@ class Parser
                 if ('+' === $token->value) {
                     $this->eat(TokenType::OPERATOR);
                     return new BinaryOperation(
-                        new Number(new Token(TokenType::INTEGER, '0')),
+                        new Number(new Token(TokenType::INTEGER_CONST, '0')),
                         $token,
                         $this->factor()
                     );
                 } else {
                     $this->eat(TokenType::OPERATOR);
                     return new BinaryOperation(
-                        new Number(new Token(TokenType::INTEGER, '0')),
+                        new Number(new Token(TokenType::INTEGER_CONST, '0')),
                         $token,
                         $this->factor()
                     );
@@ -84,11 +99,18 @@ class Parser
 
         while (
             null !== $this->currentToken &&
-            TokenType::OPERATOR === $this->currentToken->type &&
-            in_array($this->currentToken->value, ['*', '/'])
+            ((TokenType::OPERATOR === $this->currentToken->type &&
+                in_array($this->currentToken->value, ['*', '/'])) ||
+             (TokenType::INTEGER_DIV === $this->currentToken->type))
         ) {
             $token = $this->currentToken;
-            $this->eat(TokenType::OPERATOR);
+
+            if (TokenType::INTEGER_DIV === $this->currentToken->type) {
+                $this->eat(TokenType::INTEGER_DIV);
+            } else {
+                $this->eat(TokenType::OPERATOR);
+            }
+
             $node = new BinaryOperation($node, $token, $this->factor());
         }
 
@@ -125,8 +147,20 @@ class Parser
 
     public function program(): Node
     {
-        $node = $this->compoundStatement();
+        $this->eat(TokenType::PROGRAM);
+
+        /** @var Variable */
+        $variable = $this->variable();
+        $programName = (string) $variable->value;
+
+        $this->eat(TokenType::END_STATEMENT);
+
+        /** @var Block */
+        $block = $this->block();
+        $node = new Program($programName, $block);
+
         $this->eat(TokenType::DOT);
+
         return $node;
     }
 
@@ -198,6 +232,78 @@ class Parser
         $node = new Variable($this->currentToken);
         $this->eat(TokenType::ID);
         return $node;
+    }
+
+    public function block(): Node
+    {
+        $declarations = $this->declarations();
+        $compoundStatement = $this->compoundStatement();
+        return new Block($declarations, $compoundStatement);
+    }
+
+    /**
+     * @return Node[]
+     */
+    public function declarations(): array
+    {
+        /** @var Node[] */
+        $result = [];
+
+        if (null !== $this->currentToken && TokenType::VAR === $this->currentToken->type) {
+            $this->eat(TokenType::VAR);
+            /** @psalm-suppress RedundantCondition `$this->eat` affects `$this->currentToken` */
+            while (null !== $this->currentToken && TokenType::ID === $this->currentToken->type) {
+                $result = array_merge($result, $this->variableDeclarations());
+                $this->eat(TokenType::END_STATEMENT);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @return Node[]
+     */
+    public function variableDeclarations(): array
+    {
+        if (null === $this->currentToken) {
+            throw new Exception('Unexpected missing token');
+        }
+
+        $varNodes = [new Variable($this->currentToken)];
+        $this->eat(TokenType::ID);
+
+        /** @psalm-suppress RedundantCondition `$this->eat` affects `$this->currentToken` */
+        while (null !== $this->currentToken && TokenType::COMMA === $this->currentToken->type) {
+            $this->eat(TokenType::COMMA);
+            $varNodes[] = new Variable($this->currentToken);
+            $this->eat(TokenType::ID);
+        }
+
+        $this->eat(TokenType::COLON);
+        $typeNode = $this->typeSpecification();
+        /** @var Node[] */
+        $result = [];
+
+        foreach ($varNodes as $varNode) {
+            $result[] = new VariableDeclaration($varNode, $typeNode);
+        }
+
+        return $result;
+    }
+
+    public function typeSpecification(): Node
+    {
+        if (null === ($token = $this->currentToken)) {
+            throw new Exception('Missing type declaration');
+        }
+
+        if (TokenType::INTEGER === $token->type) {
+            $this->eat(TokenType::INTEGER);
+        } else {
+            $this->eat(TokenType::REAL);
+        }
+
+        return new Type($token);
     }
 
     public function empty(): Node
