@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Interpreter\Visitor;
+namespace Pascal\Visitor;
 
 use Pascal\Lexer\TokenType;
 use Pascal\Parser\AST\{Node, Number};
@@ -15,6 +15,10 @@ class NumberVisitor extends Visitor
      */
     public function visit(Node $node)
     {
+        if (null !== $this->symbolTable) {
+            return;
+        }
+
         if (!($node instanceof Number)) {
             throw new Exception();
         }

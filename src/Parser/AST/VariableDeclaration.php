@@ -6,10 +6,10 @@ namespace Pascal\Parser\AST;
 
 class VariableDeclaration extends Node
 {
-    public Node $type;
-    public Node $var;
+    public Type $type;
+    public Variable $var;
 
-    public function __construct(Node $var, Node $type)
+    public function __construct(Variable $var, Type $type)
     {
         $this->var = $var;
         $this->type = $type;

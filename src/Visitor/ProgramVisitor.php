@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Interpreter\Visitor;
+namespace Pascal\Visitor;
 
-use Pascal\Parser\AST\{Node, NoOperation};
+use Pascal\Parser\AST\{Program, Node};
 use Exception;
 
-class NoOperationVisitor extends Visitor
+class ProgramVisitor extends Visitor
 {
     /**
      * @return mixed
      */
     public function visit(Node $node)
     {
-        if (!($node instanceof NoOperation)) {
+        if (!($node instanceof Program)) {
             throw new Exception();
         }
+
+        $this->interpreter->visit($node->block);
 
         return;
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Interpreter\Visitor;
+namespace Pascal\Visitor;
 
 use Pascal\Parser\AST\{Assignment, Node, Variable};
 use Exception;
@@ -24,6 +24,17 @@ class AssignmentVisitor extends Visitor
             throw new Exception('Cannot assign to non-variable');
         }
 
-        return $this->interpreter->set((string) $var->value, $this->interpreter->visit($node->right));
+        if (null === $this->symbolTable) {
+            return $this->interpreter->set((string) $var->value, $this->interpreter->visit($node->right));
+        }
+
+        $name = (string) $var->value;
+        $symbol = $this->symbolTable->lookup($name);
+
+        if (null === $symbol) {
+            throw new Exception(sprintf('Unknown variable: %s', $name));
+        }
+
+        $this->interpreter->visit($node->right);
     }
 }

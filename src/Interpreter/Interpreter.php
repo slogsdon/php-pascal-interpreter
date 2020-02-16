@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Pascal\Interpreter;
 
 use Exception;
-use Pascal\Interpreter\Visitor\Visitor;
+use Pascal\Visitor\VisitorFactory;
 use Pascal\Lexer\Lexer;
 use Pascal\Parser\Parser;
 use Pascal\Parser\AST\Node;
@@ -28,20 +28,7 @@ class Interpreter
      */
     public function visit(Node $node)
     {
-        $className = get_class($node);
-        $classParts = explode('\\', $className);
-        $visitorName = sprintf((string) Visitor::CLASS_PATTERN, (string) end($classParts));
-
-        if (!class_exists($visitorName)) {
-            throw new Exception(sprintf('Visitor not defined for %s, tried %s', $className, $visitorName));
-        }
-
-        /**
-         * @var Visitor
-         * @psalm-suppress MixedMethodCall
-         */
-        $visitor = new $visitorName($this);
-        return $visitor->visit($node);
+        return VisitorFactory::forInterpreter($node);
     }
 
     /**

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Interpreter\Visitor;
+namespace Pascal\Visitor;
 
-use Pascal\Parser\AST\{Node, VariableDeclaration};
+use Pascal\Parser\AST\{Node, NoOperation};
 use Exception;
 
-class VariableDeclarationVisitor extends Visitor
+class NoOperationVisitor extends Visitor
 {
     /**
      * @return mixed
      */
     public function visit(Node $node)
     {
-        if (!($node instanceof VariableDeclaration)) {
+        if (!($node instanceof NoOperation)) {
             throw new Exception();
         }
 

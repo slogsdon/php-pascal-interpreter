@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pascal\Interpreter\Visitor;
+namespace Pascal\Visitor;
 
 use Pascal\Parser\AST\{Compound, Node};
 use Exception;
